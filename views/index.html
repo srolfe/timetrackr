@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Trackr</title>
+	
+	<!-- Load stylesheets -->
+	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+	<link href="./css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+	<link href="./css/trackr.css" rel="stylesheet">
+	
+	<!-- Load JavaScripts -->
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+	<script src="./js/bootstrap-datetimepicker.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="./js/trackr.js"></script>
+</head>
+<body>
+	<!-- Refresh modal -->
+	<div id="refreshModal" class="modal-backdrop fade in hide">
+		<i class="icon icon-white icon-refresh icon-animated-spinning animate-unlimited-times"></i> <span class="lead">Reloading</span>
+	</div>
+	
+	<!-- Login modal -->
+	<div id="loginModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
+		<div class="modal-header">
+			<h3 id="loginModalLabel">Login</h3>
+		</div>
+		<div class="modal-body">
+			<form class="form-inline">
+				<div id="userCont" class="control-group">
+					<div class="input-prepend">
+						<span class="add-on">
+							<i class="icon-user"></i>
+						</span>
+						<input id="usernameField" type="text" placeholder="username" />
+					</div>
+				</div>
+				<div id="passCont" class="control-group">
+					<div class="input-prepend">
+						<span class="add-on">
+							<i class="icon-lock"></i>
+						</span>
+						<input id="passwordField" type="password" placeholder="password" />
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="modal-footer">
+			<button id="loginToSite" class="btn btn-primary"><i class="icon-white icon-user" id="logButIcon"></i> Login</button>
+		</div>
+	</div>
+
+	<!-- Record time modal -->
+	<div id="recordTime" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="recordTimeLabel" aria-hidden="true">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="recordTimeLabel">Record time</h3>
+		</div>
+		<div class="modal-body">
+			<p>
+				Are you sure you wish to record <i id="okIcon" class="icon-ok"></i><i id="timeIcon" class="icon-time"></i> <span id="modalTime">now</span> as your time out?
+			</p>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" id="recCancel" data-dismiss="modal" aria-hidden="true"><i class="icon-remove"></i> Cancel</button>
+			<button id="rec" class="btn btn-primary"><i id="recButIcon" class="icon-white icon-edit"></i> <span id="recordText">Record <span id="modText">modified&nbsp;</span>time</span></button>
+		</div>
+	</div>
+	
+	<!-- Navbar -->
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="brand" href="#">TimeTrackr</a>
+				<ul class="nav">
+					<li class="active"><a href="#">Home</a></li>
+				</ul>
+				<ul class="nav pull-right">
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="icon icon-user"></i> <span id="nav-uname">Login</span> <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#loginModal" data-toggle="modal">Logout</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Main content -->
+	<div id="mainContainer" class="container">
+		<!-- Lead text -->
+		<span class="lead">Hello<span id="uname"></span>!</span>
+		<div id="datePick" class="btn-group pull-right">
+			<input type="hidden" data-format="MM/dd/yyyy" type="text"></input>
+			<button class="btn btn-small disabled"><i class="icon icon-calendar"></i> Friday, June 28<sup>th</sup> 2013</button>
+				<button class="add-on btn btn-small dropdown-toggle">
+					<span class="caret"></span>
+				</button>
+			<ul class="dropdown-menu">
+				<li><a tabindex="-1" href="#">Action</a></li>
+			</ul>
+		</div>
+
+		<!-- Timesheet -->
+		<table id="timeSheet" class="table table-bordered table-hover box-shadow">
+			<div id="tableLoader" class="span12">
+				<i class="icon icon-refresh icon-animated-spinning animate-unlimited-times"></i> <span class="lead">Loading</span>
+			</div>
+			<thead>
+				<tr>
+					<th></th>
+					<th><i class="icon icon-arrow-up"></i> In</th>
+					<th><i class="icon icon-arrow-down"></i> Out</th>
+					<th><i class="icon icon-list-alt"></i> Total</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td class="totalCols" colspan="3"><i class="icon-book"></i> Total Break</td>
+					<td id="breakCol">--</td>
+				</tr>
+				<tr>
+					<td class="totalCols" colspan="3"><i class="icon-briefcase"></i> Total Clock</td>
+					<td id="clockCol">--</td>
+				</tr>
+			</tfoot>
+		</table>
+	</div>
+</body>
+</html>

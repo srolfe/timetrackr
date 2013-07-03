@@ -1,0 +1,106 @@
+/* Class-specific */
+.activeEdit{
+    text-decoration:underline;
+    color:#da4f49;
+}
+
+.table td, .table th{
+    text-align:center;
+}
+
+.table td{
+	margin-bottom: 20px;
+	font-size: 21px;
+	font-weight: 200;
+	line-height: 30px;
+}
+
+.totalCols{
+	text-align:right !important;
+	background-color:#eee;
+	padding-right:20px !important;
+}
+
+/* Element-specific */
+#tableLoader{
+	margin-left:0px;
+	background-color:#fff;
+	position:absolute;
+	z-index:2;
+	opacity:0.9;
+	text-align:center;
+	display:none;
+}
+
+#refreshModal{
+	text-align:center;
+	color:#fff;
+}
+
+#userCont, #passCont{
+	display:inline;
+}
+
+#okIcon{
+	opacity:0;
+	width:0px;
+}
+
+#modText{
+	display:inline-block;
+	width:0px;
+	overflow:hidden;
+}
+
+#mainContainer{
+	padding-top:80px;
+}
+
+/* Icon animations */
+* > i[class^="icon-"].icon-animated-spinning{
+    transition:all 0.4s linear;
+    -webkit-transition:all 0.4s linear;
+    transform:rotate(360deg);
+    -webkit-transform:rotate(360deg);
+    -ms-transform:rotate(360deg);
+}
+
+* > i[class^="icon-"].icon-animated-spinning{
+    animation:animation-spinning 0.4s linear;
+    animation-iteration-count:1;
+    -webkit-animation:animation-spinning 0.4s linear;
+    -webkit-animation-iteration-count:1;
+}
+
+.icon-animated-spinning{
+    transition:all 0.4s linear;
+    -webkit-transition:all 0.4s linear;
+    transform:rotate(360deg);
+    -webkit-transform:rotate(360deg);
+    -ms-transform:rotate(360deg);
+}
+
+.icon-animated-spinning{
+    animation:animation-spinning 0.4s linear;
+    animation-iteration-count:1;
+    -webkit-animation:animation-spinning 0.4s linear;
+    -webkit-animation-iteration-count:1;
+}
+
+@keyframes animation-spinning{
+    100%{
+        transform:rotate(720deg);
+        -ms-transform:rotate(720deg);
+    }
+}
+
+@-webkit-keyframes animation-spinning{
+    100%{
+        -webkit-transform:rotate(720deg);
+    }
+}
+
+.animate-unlimited-times{
+    animation-iteration-count:infinite !important;
+    -webkit-animation-iteration-count:infinite !important;
+}
