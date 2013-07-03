@@ -1,0 +1,16 @@
+{
+	"name": "trackr",
+	"version": "0.1.0",
+	"description": "NodeJS time clock application",
+	"main": "./time.js",
+	"dependencies": {
+		"express.io": "1.1.12",
+		"ldapjs": "0.6.3",
+		"mustache": "0.7.2",
+		"tedious": "0.1.5",
+		"consolidate": "0.9.1"
+	},
+	"scripts": {
+		"start": "node time.js"
+	}
+}
