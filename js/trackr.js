@@ -1,12 +1,5 @@
 // Initialize some variables
-var timeInt=window.setInterval(updateModalTime,500);
-var finishEditing;
-var editTime=false;
-var didEdit=false;
-var loggingIn=false;
-var savingTime=false;
-var userDat;
-var sheetData;
+var editTime=false, didEdit=false, loggingIn=false, savingTime=false, userDat, sheetData, finishEditing, timeInt;
 
 // IE support for ISO format
 (function(){
@@ -43,43 +36,52 @@ var sheetData;
 })()
 
 var socket=io.connect(window.location.host);
+
+// -- Socket.io [General] --
 socket.on('connect',function(){
 	socket.emit('user:check');
 });
-socket.on('loginOk',function(data){
-	console.log(data);
+
+// -- Socket.io [User] --
+socket.on('user:login:ok',function(data){
 	setTimeout(finishLoggingIn,100);
 	userDat=data;
 	$('#nav-uname').html(data.uname);
 	$('#uname').html(', '+data.name);
 	requestSheetData();
 });
-socket.on('loginBad',function(data){
+
+socket.on('user:login:bad',function(data){
 	badLogin(data.error);
-})
-socket.on('sheetData',function(data){
-	reloadTable(data);
-})
-socket.on('sessionActive',function(data){
+});
+
+socket.on('user:session:ok',function(data){
 	userDat=data;
 	$('#nav-uname').html(data.uname);
 	$('#uname').html(', '+data.name);
 	requestSheetData();
 });
-socket.on('sessionInactive',function(){
+
+socket.on('user:session:bad',function(){
 	showLoginModal();
-})
-socket.on('recordOK',function(){
+});
+
+// -- Socket.io [Sheet] --
+socket.on('sheet:data',function(data){
+	reloadTable(data);
+});
+
+socket.on('sheet:record:ok',function(){
 	$('#tableLoader').fadeIn(function(){
 		socket.emit('sheet:request');
 	});
-})
+});
 
 // Run on jQuery ready
 $(document).ready(function(){
-	console.log("OK");
-	// Set the refresh modal's line-height (for vertical centering)
+	timeInt=window.setInterval(updateModalTime,500);
 	window.setInterval(function(){
+		// Set the refresh modal's line-height (for vertical centering)
 		$('#refreshModal').css('line-height',$('#refreshModal').css('height'));
 		$('#tableLoader').css('height',$('#timeSheet').height()+2+"px");
 		$('#tableLoader').css('line-height',$('#timeSheet').height()+2+"px");
@@ -92,16 +94,48 @@ $(document).ready(function(){
 			$('.bootstrap-datetimepicker-widget').css('opacity',1);
 			$('#refreshModal').modal({backdrop:true});
 		}});
-    	console.log(ev.date.valueOf());
     });
 	
-	//showLoginModal(); // Show our login modal
-	setupBinds(); // Binds
+	setupBinds();
 });
 
 function requestSheetData(){
 	$('#tableLoader').fadeIn();
 	socket.emit('sheet:request');
+}
+
+// -- Date helper functions --
+
+// ISO timestamp -> Object
+function dateToOb(date){
+	return {
+		t: Date.fromISO(date),
+		get h () {
+			return ((this.t.getHours()>12?this.t.getHours()-12:this.t.getHours()).toString().length==1?"0":"")+(this.t.getHours()>12?this.t.getHours()-12:this.t.getHours()).toString();
+		},
+		get m () {
+			return ((this.t.getMinutes()).toString().length==1?"0":"")+(this.t.getMinutes()).toString();
+		},
+		get a () {
+			return this.t.getHours()>12?"pm":"am";
+		}
+	}
+}
+
+// Timestamp interval -> Object
+function intToOb(date){
+	var ob = {
+		d: date,
+		s: date/1000,
+		m: Math.floor((date/1000)/60),
+		h: Math.floor(Math.floor((date/1000)/60)/60)
+	}
+	
+	if (ob.m>60) ob.m=ob.m-(ob.h*60);
+	ob.m = ob.m.toString().length==1?"0"+ob.m.toString():ob.m;
+	ob.h = ob.h.toString().length==1?"0"+ob.h.toString():ob.h;
+	
+	return ob;
 }
 
 function reloadTable(data){
@@ -114,12 +148,7 @@ function reloadTable(data){
 	
 	// Flip between col1 and col2, filling in data
 	for (var i in data){
-		// Break timestamp into time parts
-		var t=Date.fromISO(data[i].timeR);
-		var h=((t.getHours()).toString().length==1?"0":"")+(t.getHours()).toString();
-		var m=((t.getMinutes()).toString().length==1?"0":"")+(t.getMinutes()).toString();
-		var a="am";
-		if (h>12){h-=12;a="pm"}
+		var t=dateToOb(data[i].timeR);
 		
 		// Col1
 		if (!flip){
@@ -128,27 +157,15 @@ function reloadTable(data){
 		};
 		
 		// Every col
-		html+="<td>"+h+":"+m+" <sup>"+a+"</sup></td>";
+		html+="<td>"+t.h+":"+t.m+" <sup>"+t.a+"</sup></td>";
 		
 		// Col2
 		if (flip){
-			var t=(Date.fromISO(data[i].timeR).getTime()-Date.fromISO(data[i-1].timeR).getTime());
-			timeC+=t;
+			var interval=Date.fromISO(data[i].timeR).getTime()-Date.fromISO(data[i-1].timeR).getTime();
+			timeC+=interval;
+			var t=intToOb(interval);
 			
-			// Col3
-			var ms=t/1000;
-			var mm=ms/60;
-			var hh=mm/60;
-			
-			mm=Math.round(mm);
-			hh=Math.floor(hh);
-			
-			if (mm>60) mm-=(hh*60);
-			
-			mm=mm.toString().length==1?"0"+mm.toString():mm;
-			hh=hh.toString().length==1?"0"+hh.toString():hh;
-			
-			comp=hh+":"+mm;
+			comp=t.h+":"+t.m;
 			
 			html+="<td>"+comp+"</td>"
 			html+="</tr>";
@@ -158,34 +175,19 @@ function reloadTable(data){
 				html+="<tr class='warning'><td><i class='icon icon-book'></i></td>";
 				
 				// Col 1
-				var t=Date.fromISO(data[i].timeR);
-				var h=((t.getHours()).toString().length==1?"0":"")+(t.getHours()).toString();
-				var m=((t.getMinutes()).toString().length==1?"0":"")+(t.getMinutes()).toString();
-				var a="am";
-				if (h>12){h-=12;a="pm"}
-				html+="<td>"+h+":"+m+" <sup>"+a+"</sup></td>";
+				var t=dateToOb(data[i].timeR);
+				html+="<td>"+t.h+":"+t.m+" <sup>"+t.a+"</sup></td>";
 				
 				// Col 2
-				var t2=Date.fromISO(data[parseInt(i)+1].timeR);
-				var h2=((t2.getHours()).toString().length==1?"0":"")+(t2.getHours()).toString();
-				var m2=((t2.getMinutes()).toString().length==1?"0":"")+(t2.getMinutes()).toString();
-				var a2="am";
-				if (h2>12){h2-=12;a2="pm"}
-				html+="<td>"+h2+":"+m2+" <sup>"+a2+"</sup></td>";
+				var t2=dateToOb(data[parseInt(i)+1].timeR);
+				html+="<td>"+t2.h+":"+t2.m+" <sup>"+t2.a+"</sup></td>";
 				
 				// Col 3
-				var tf=t2.getTime()-t.getTime();
-				timeB+=tf;
-				var ms=tf/1000;
-				var mm=ms/60;
-				var hh=mm/60;
-				mm=Math.round(mm);
-				hh=Math.floor(hh);
-				if (mm>60) mm-=(hh*60);
-				mm=mm.toString().length==1?"0"+mm.toString():mm;
-				hh=hh.toString().length==1?"0"+hh.toString():hh;
+				var interval=t2.t.getTime()-t.t.getTime()
+				timeB+=interval;
+				var tt=intToOb(interval);
 				
-				comp=hh+":"+mm;
+				comp=tt.h+":"+tt.m;
 			
 				html+="<td>"+comp+"</td>"
 				html+="</tr>";
@@ -211,30 +213,12 @@ function reloadTable(data){
 	$('#timeSheet tbody').html(html);
 	
 	// Calculate total clock
-	var ms=timeC/1000;
-	var mm=ms/60;
-	var hh=mm/60;
-	mm=Math.round(mm);
-	hh=Math.floor(hh);	
-	if (mm>59) mm-=(hh*60);
-	mm=mm.toString().length==1?"0"+mm.toString():mm;
-	hh=hh.toString().length==1?"0"+hh.toString():hh;
-	
-	// Record total clock
-	$('#clockCol').html(hh+":"+mm);
+	var t=intToOb(timeC);
+	$('#clockCol').html(t.h+":"+t.m);
 	
 	// Calculate total break
-	var ms=timeB/1000;
-	var mm=ms/60;
-	var hh=mm/60;
-	mm=Math.round(mm);
-	hh=Math.floor(hh);	
-	if (mm>60) mm-=(hh*60);
-	mm=mm.toString().length==1?"0"+mm.toString():mm;
-	hh=hh.toString().length==1?"0"+hh.toString():hh;
-	
-	// Record total clock
-	$('#breakCol').html(hh+":"+mm);
+	var t=intToOb(timeB);
+	$('#breakCol').html(t.h+":"+t.m);
 	
 	// Clear the loader
 	finishIconSpin('#tableLoader i',function(){

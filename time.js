@@ -18,7 +18,7 @@ var app=express().http().io();
 var conf={
 	// Trackr
 	trackr: {
-		port: 80,
+		port: '3000',
 		session: {
 			secret: 'helloWorld'
 		},
@@ -104,9 +104,9 @@ app.io.route('user', {
 	// Check if session is still active
 	check: function(req) {
 		if (req.session.uid!=undefined){
-			req.io.emit('sessionActive',{id:req.session.uid,name:req.session.name,uname:req.session.uname});
+			req.io.emit('user:session:ok',{id:req.session.uid,name:req.session.name,uname:req.session.uname});
 		}else{
-			req.io.emit('sessionInactive');
+			req.io.emit('user:session:bad');
 		}
 	},
 	
@@ -115,7 +115,7 @@ app.io.route('user', {
 		authenticateLDAP(req.data.username,req.data.password,function(dat){
 			if (dat.error!=undefined){
 				// Login error
-				req.io.emit('loginBad',dat);
+				req.io.emit('user:login:bad',dat);
 			}else{
 				// Login success
 				var name=(dat.split(",")[0]).substr(3);
@@ -127,7 +127,7 @@ app.io.route('user', {
 				
 					req.session.save(function(err){
 						if (err) console.error(err);
-						req.io.emit('loginOk',{id:req.session.uid,name:req.session.name,uname:req.session.uname});
+						req.io.emit('user:login:ok',{id:req.session.uid,name:req.session.name,uname:req.session.uname});
 					});
 				});
 			}
@@ -165,7 +165,7 @@ app.io.route('sheet', {
 		});
 	
 		loadSheet.on('done',function(rowCount, more, rows){
-			req.io.emit('sheetData',records);
+			req.io.emit('sheet:data',records);
 		});
 	
 		connection.execSqlBatch(loadSheet);
@@ -185,7 +185,7 @@ app.io.route('sheet', {
 		})
 	
 		recordStamp.on('done',function(rowCount, more, rows){
-			req.io.emit('recordOK');
+			req.io.emit('sheet:record:ok');
 		})
 	
 		connection.execSqlBatch(recordStamp);
