@@ -44,7 +44,7 @@ var sheetData;
 
 var socket=io.connect(window.location.host);
 socket.on('connect',function(){
-	socket.emit('checkSession');
+	socket.emit('user:check');
 });
 socket.on('loginOk',function(data){
 	console.log(data);
@@ -71,7 +71,7 @@ socket.on('sessionInactive',function(){
 })
 socket.on('recordOK',function(){
 	$('#tableLoader').fadeIn(function(){
-		socket.emit('needSheetData');
+		socket.emit('sheet:request');
 	});
 })
 
@@ -101,7 +101,7 @@ $(document).ready(function(){
 
 function requestSheetData(){
 	$('#tableLoader').fadeIn();
-	socket.emit('needSheetData');
+	socket.emit('sheet:request');
 }
 
 function reloadTable(data){
@@ -256,7 +256,7 @@ function recordStamp(){
 		timeS: timeS
 	}
 	
-	socket.emit('recordTimestamp',dat);
+	socket.emit('sheet:save',dat);
 }
 
 function badLogin(error){
@@ -293,7 +293,7 @@ function badLogin(error){
 }
 
 function doLogin(){
-	socket.emit('login',{username:$('#usernameField').val(),password:$('#passwordField').val()});
+	socket.emit('user:auth',{username:$('#usernameField').val(),password:$('#passwordField').val()});
 }
 
 // Handle user logout
