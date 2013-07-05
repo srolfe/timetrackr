@@ -108,17 +108,13 @@ function requestSheetData(){
 
 // ISO timestamp -> Object
 function dateToOb(date){
+	var dd=Date.fromISO(date);
+	
 	return {
-		t: Date.fromISO(date),
-		get h () {
-			return ((this.t.getHours()>12?this.t.getHours()-12:this.t.getHours()).toString().length==1?"0":"")+(this.t.getHours()>12?this.t.getHours()-12:this.t.getHours()).toString();
-		},
-		get m () {
-			return ((this.t.getMinutes()).toString().length==1?"0":"")+(this.t.getMinutes()).toString();
-		},
-		get a () {
-			return this.t.getHours()>12?"pm":"am";
-		}
+		t: dd,
+		h: ((dd.getHours()>12?dd.getHours()-12:dd.getHours()).toString().length==1?"0":"")+(dd.getHours()>12?dd.getHours()-12:dd.getHours()).toString(),
+		m: ((dd.getMinutes()).toString().length==1?"0":"")+(dd.getMinutes()).toString(),
+		a: dd.getHours()>12?"pm":"am"
 	}
 }
 
